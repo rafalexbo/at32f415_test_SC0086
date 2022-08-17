@@ -91,7 +91,7 @@ static usb_sts_type class_init_handler(void *udev)
   usbd_core_type *pudev = (usbd_core_type *)udev;
   cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
 
-#ifndef USB_EPT_AUTO_MALLOC_BUFFER
+#if 0
   /* use user define buffer address */
   usbd_ept_buf_custom_define(pudev, USBD_CDC_INT_EPT, EPT2_TX_ADDR);
   usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_IN_EPT, EPT1_TX_ADDR);

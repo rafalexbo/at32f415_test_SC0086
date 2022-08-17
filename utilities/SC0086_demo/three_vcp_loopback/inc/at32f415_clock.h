@@ -1,9 +1,9 @@
 /**
   **************************************************************************
-  * @file     at32f403a_407_int.h
+  * @file     at32f403a_407_clock.h
   * @version  v2.0.8
   * @date     2022-04-02
-  * @brief    header file of main interrupt service routines.
+  * @brief    header file of clock program
   **************************************************************************
   *                       Copyright notice & Disclaimer
   *
@@ -25,34 +25,22 @@
   */
 
 /* define to prevent recursive inclusion -------------------------------------*/
-#ifndef __AT32F403A_407_INT_H
-#define __AT32F403A_407_INT_H
+#ifndef __AT32F403A_407_CLOCK_H
+#define __AT32F403A_407_CLOCK_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* includes ------------------------------------------------------------------*/
-#include "at32f403a_407.h"
+#include "at32f415.h"
 
-/* exported types ------------------------------------------------------------*/
-/* exported constants --------------------------------------------------------*/
-/* exported macro ------------------------------------------------------------*/
 /* exported functions ------------------------------------------------------- */
-
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
+void system_clock_config(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* __AT32F403A_407_CLOCK_H */
 

@@ -24,8 +24,8 @@
   **************************************************************************
   */
 
-#include "at32f403a_407_board.h"
-#include "at32f403a_407_clock.h"
+#include "at32f415_board.h"
+#include "at32f415_clock.h"
 #include "usbd_core.h"
 #include "cdc_class.h"
 #include "cdc_desc.h"
@@ -38,11 +38,14 @@
 /** @addtogroup 403A_USB_device_vcp_loopback USB_device_vcp_loopback
   * @{
   */
-
-usbd_core_type usb_core_dev;
+    
+/* usb global struct define */
+//usbd_core_type usb_core_dev;
+otg_core_type usb_core_dev;
 uint8_t usb_buffer[512];
 uint8_t usb_buffer2[512];
 uint8_t usb_buffer1[512];
+
 /**
   * @brief  usb 48M clock select
   * @param  clk_s:USB_CLK_HICK, USB_CLK_HEXT
@@ -50,66 +53,40 @@ uint8_t usb_buffer1[512];
   */
 void usb_clock48m_select(usb_clk48_s clk_s)
 {
-  if(clk_s == USB_CLK_HICK)
+  switch(system_core_clock)
   {
-    crm_usb_clock_source_select(CRM_USB_CLOCK_SOURCE_HICK);
+    /* 48MHz */
+    case 48000000:
+      crm_usb_clock_div_set(CRM_USB_DIV_1);
+      break;
 
-    /* enable the acc calibration ready interrupt */
-    crm_periph_clock_enable(CRM_ACC_PERIPH_CLOCK, TRUE);
+    /* 72MHz */
+    case 72000000:
+      crm_usb_clock_div_set(CRM_USB_DIV_1_5);
+      break;
 
-    /* update the c1\c2\c3 value */
-    acc_write_c1(7980);
-    acc_write_c2(8000);
-    acc_write_c3(8020);
+    /* 96MHz */
+    case 96000000:
+      crm_usb_clock_div_set(CRM_USB_DIV_2);
+      break;
 
-    /* open acc calibration */
-    acc_calibration_mode_enable(ACC_CAL_HICKTRIM, TRUE);
+    /* 120MHz */
+    case 120000000:
+      crm_usb_clock_div_set(CRM_USB_DIV_2_5);
+      break;
+
+    /* 144MHz */
+    case 144000000:
+      crm_usb_clock_div_set(CRM_USB_DIV_3);
+      break;
+
+    default:
+      break;
+
   }
-  else
-  {
-    switch(system_core_clock)
-    {
-      /* 48MHz */
-      case 48000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_1);
-        break;
 
-      /* 72MHz */
-      case 72000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_1_5);
-        break;
-
-      /* 96MHz */
-      case 96000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_2);
-        break;
-
-      /* 120MHz */
-      case 120000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_2_5);
-        break;
-
-      /* 144MHz */
-      case 144000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_3);
-        break;
-
-      /* 168MHz */
-      case 168000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_3_5);
-        break;
-
-      /* 192MHz */
-      case 192000000:
-        crm_usb_clock_div_set(CRM_USB_DIV_4);
-        break;
-
-      default:
-        break;
-
-    }
-  }
 }
+
 
 /**
   * @brief  main function.
@@ -132,21 +109,21 @@ int main(void)
   system_clock_config();
 
   at32_board_init();
+  
+  /* enable otgfs clock */
+  crm_periph_clock_enable(OTG_CLOCK, TRUE);
 
   /* select usb 48m clcok source */
   usb_clock48m_select(USB_CLK_HEXT);
 
-  /* enable usb clock */
-  crm_periph_clock_enable(CRM_USB_PERIPH_CLOCK, TRUE);
-
-  /* enable usb interrupt */
-  nvic_irq_enable(USBFS_L_CAN1_RX0_IRQn, 0, 0);
+  /* enable otgfs irq */
+  nvic_irq_enable(OTG_IRQ, 0, 0);
 
   /* usb core init */
-  usbd_core_init(&usb_core_dev, USB, &cdc_class_handler, &cdc_desc_handler, 0);
+  usbd_init(&usb_core_dev, USB_FULL_SPEED_CORE_ID, USB_ID, &cdc_class_handler, &cdc_desc_handler);
 
   /* enable usb pull-up */
-  usbd_connect(&usb_core_dev);
+  //usbd_connect(&usb_core_dev);
 
   while(1)
   {

@@ -32,8 +32,8 @@
 extern "C" {
 #endif
 
-#include "at32f403a_407.h"
-#include "at32f403a_407_board.h"
+#include "at32f415.h"
+#include "at32f415.h"
 #include "stdio.h"
 
 /** @addtogroup AT32F403A_periph_examples
@@ -43,6 +43,32 @@ extern "C" {
 /** @addtogroup 403A_USB_device_vcp_loopback
   * @{
   */
+    
+/**
+  * @brief enable usb host mode
+  */
+/* #define USE_OTG_HOST_MODE */
+
+#define USB_ID                           0
+#define OTG_CLOCK                        CRM_OTGFS1_PERIPH_CLOCK
+#define OTG_IRQ                          OTGFS1_IRQn
+    
+  
+/**
+  * @brief usb device mode config
+  */
+#ifdef USE_OTG_DEVICE_MODE
+/**
+  * @brief usb device mode fifo
+  */
+/* otg1 device fifo */
+#define USBD_RX_SIZE                     128
+#define USBD_EP0_TX_SIZE                 24
+#define USBD_EP1_TX_SIZE                 20
+#define USBD_EP2_TX_SIZE                 20
+#define USBD_EP3_TX_SIZE                 20
+#endif
+  
 /**
   * @brief usb endpoint max num define
   */

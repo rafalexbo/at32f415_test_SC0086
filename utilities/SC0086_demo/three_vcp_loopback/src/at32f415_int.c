@@ -1,6 +1,6 @@
 /**
   **************************************************************************
-  * @file     at32f403a_407_int.c
+  * @file     at32f415_int.c
   * @version  v2.0.8
   * @date     2022-04-02
   * @brief    main interrupt service routines.
@@ -25,7 +25,7 @@
   */
 
 /* includes ------------------------------------------------------------------*/
-#include "at32f403a_407_int.h"
+#include "at32f415_int.h"
 
 /** @addtogroup AT32F403A_periph_examples
   * @{

@@ -1,6 +1,6 @@
 /**
   **************************************************************************
-  * @file     at32f403a_407_clock.c
+  * @file     at32f415_clock.c
   * @version  v2.0.8
   * @date     2022-04-02
   * @brief    system clock config program
@@ -25,43 +25,52 @@
   */
 
 /* includes ------------------------------------------------------------------*/
-#include "at32f403a_407_clock.h"
+#include "at32f415_clock.h"
+
+/** @addtogroup AT32F415_periph_template
+  * @{
+  */
+
+/** @addtogroup 415_System_clock_configuration System_clock_configuration
+  * @{
+  */
+
 
 /**
   * @brief  system clock config program
   * @note   the system clock is configured as follow:
-  *         - system clock        = hext / 2 * pll_mult
-  *         - system clock source = pll (hext)
-  *         - hext                = 8000000
-  *         - sclk                = 192000000
+  *         - system clock        = hick / 12 * pll_mult
+  *         - system clock source = pll (hick)
+  *         - sclk                = 144000000
   *         - ahbdiv              = 1
-  *         - ahbclk              = 192000000
-  *         - apb2div             = 2
-  *         - apb2clk             = 96000000
+  *         - ahbclk              = 144000000
   *         - apb1div             = 2
-  *         - apb1clk             = 96000000
-  *         - pll_mult            = 48
-  *         - pll_range           = GT72MHZ (greater than 72 mhz)
+  *         - apb1clk             = 72000000
+  *         - apb2div             = 2
+  *         - apb2clk             = 72000000
+  *         - pll_mult            = 36
+  *         - flash_wtcyc         = 4 cycle
   * @param  none
   * @retval none
   */
 void system_clock_config(void)
 {
+  /* config flash psr register */
+  flash_psr_set(FLASH_WAIT_CYCLE_4);
+
   /* reset crm */
   crm_reset();
 
-  crm_clock_source_enable(CRM_CLOCK_SOURCE_HEXT, TRUE);
+  /* enable hick */
+  crm_clock_source_enable(CRM_CLOCK_SOURCE_HICK, TRUE);
 
-   /* wait till hext is ready */
-  while(crm_hext_stable_wait() == ERROR)
+  /* wait till hick is ready */
+   while(crm_flag_get(CRM_HICK_STABLE_FLAG) != SET)
   {
   }
 
   /* config pll clock resource */
-  crm_pll_config(CRM_PLL_SOURCE_HEXT_DIV, CRM_PLL_MULT_48, CRM_PLL_OUTPUT_RANGE_GT72MHZ);
-
-  /* config hext division */
-  crm_hext_clock_div_set(CRM_HEXT_DIV_2);
+  crm_pll_config(CRM_PLL_SOURCE_HICK, CRM_PLL_MULT_36);
 
   /* enable pll */
   crm_clock_source_enable(CRM_CLOCK_SOURCE_PLL, TRUE);
@@ -94,7 +103,18 @@ void system_clock_config(void)
   /* disable auto step mode */
   crm_auto_step_mode_enable(FALSE);
 
+  /* config usbclk from pll */
+  crm_usb_clock_div_set(CRM_USB_DIV_3);
+  crm_usb_clock_source_select(CRM_USB_CLOCK_SOURCE_PLL);
+
   /* update system_core_clock global variable */
   system_core_clock_update();
 }
 
+/**
+  * @}
+  */ 
+
+/**
+  * @}
+  */ 
