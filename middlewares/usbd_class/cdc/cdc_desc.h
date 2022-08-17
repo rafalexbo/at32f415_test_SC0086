@@ -1,8 +1,8 @@
 /**
   **************************************************************************
   * @file     cdc_desc.h
-  * @version  v2.0.6
-  * @date     2022-06-28
+  * @version  v2.0.8
+  * @date     2022-04-02
   * @brief    usb cdc descriptor header file
   **************************************************************************
   *                       Copyright notice & Disclaimer
@@ -35,7 +35,7 @@ extern "C" {
 #include "cdc_class.h"
 #include "usbd_core.h"
 
-/** @addtogroup AT32F415_middlewares_usbd_class
+/** @addtogroup AT32F403A_407_middlewares_usbd_class
   * @{
   */
 
@@ -55,12 +55,12 @@ extern "C" {
   * @brief usb vendor id and product id define
   */
 #define USBD_CDC_VENDOR_ID               0x2E3C
-#define USBD_CDC_PRODUCT_ID              0x5740
+#define USBD_CDC_PRODUCT_ID              0x7540
 
 /**
   * @brief usb descriptor size define
   */
-#define USBD_CDC_CONFIG_DESC_SIZE        67
+#define USBD_CDC_CONFIG_DESC_SIZE        207
 #define USBD_CDC_SIZ_STRING_LANGID       4
 #define USBD_CDC_SIZ_STRING_SERIAL       0x1A
 

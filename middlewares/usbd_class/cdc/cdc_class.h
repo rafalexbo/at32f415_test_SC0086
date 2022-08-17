@@ -1,8 +1,8 @@
 /**
   **************************************************************************
   * @file     cdc_class.h
-  * @version  v2.0.6
-  * @date     2022-06-28
+  * @version  v2.0.8
+  * @date     2022-04-02
   * @brief    usb cdc class file
   **************************************************************************
   *                       Copyright notice & Disclaimer
@@ -35,7 +35,7 @@ extern "C" {
 #include "usb_std.h"
 #include "usbd_core.h"
 
-/** @addtogroup AT32F415_middlewares_usbd_class
+/** @addtogroup AT32F403A_407_middlewares_usbd_class
   * @{
   */
 
@@ -53,6 +53,14 @@ extern "C" {
 #define USBD_CDC_INT_EPT                 0x82
 #define USBD_CDC_BULK_IN_EPT             0x81
 #define USBD_CDC_BULK_OUT_EPT            0x01
+
+#define USBD_CDC_INT1_EPT                 0x83
+#define USBD_CDC_BULK_IN1_EPT             0x84
+#define USBD_CDC_BULK_OUT1_EPT            0x04
+
+#define USBD_CDC_INT2_EPT                 0x86
+#define USBD_CDC_BULK_IN2_EPT             0x85
+#define USBD_CDC_BULK_OUT2_EPT            0x05
 
 /**
   * @brief usb cdc in and out max packet size define
@@ -76,10 +84,16 @@ typedef struct
 {
   uint32_t alt_setting;
   uint8_t g_rx_buff[USBD_CDC_OUT_MAXPACKET_SIZE];
+  uint8_t g_rx1_buff[USBD_CDC_OUT_MAXPACKET_SIZE];
+  uint8_t g_rx2_buff[USBD_CDC_OUT_MAXPACKET_SIZE];
   uint8_t g_cmd[USBD_CDC_CMD_MAXPACKET_SIZE];
   uint8_t g_req;
   uint16_t g_len, g_rxlen;
+  uint16_t g_len1, g_rxlen1;
+  uint16_t g_len2, g_rxlen2;
   __IO uint8_t g_tx_completed, g_rx_completed;
+  __IO uint8_t g_tx1_completed, g_rx1_completed;
+  __IO uint8_t g_tx2_completed, g_rx2_completed;
   linecoding_type linecoding;
 }cdc_struct_type;
 
@@ -95,6 +109,11 @@ extern usbd_class_handler cdc_class_handler;
 uint16_t usb_vcp_get_rxdata(void *udev, uint8_t *recv_data);
 error_status usb_vcp_send_data(void *udev, uint8_t *send_data, uint16_t len);
 
+uint16_t usb_vcp_get_rx2data(void *udev, uint8_t *recv_data);
+error_status usb_vcp_send2_data(void *udev, uint8_t *send_data, uint16_t len);
+
+uint16_t usb_vcp_get_rx1data(void *udev, uint8_t *recv_data);
+error_status usb_vcp_send1_data(void *udev, uint8_t *send_data, uint16_t len);
 /**
   * @}
   */
@@ -106,12 +125,12 @@ error_status usb_vcp_send_data(void *udev, uint8_t *send_data, uint16_t len);
 /**
   * @}
   */
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
 
 
 

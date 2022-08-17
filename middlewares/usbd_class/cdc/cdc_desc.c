@@ -1,8 +1,8 @@
 /**
   **************************************************************************
   * @file     cdc_desc.c
-  * @version  v2.0.6
-  * @date     2022-06-28
+  * @version  v2.0.8
+  * @date     2022-04-02
   * @brief    usb cdc device descriptor
   **************************************************************************
   *                       Copyright notice & Disclaimer
@@ -23,13 +23,12 @@
   *
   **************************************************************************
   */
-#include "stdio.h"
 #include "usb_std.h"
 #include "usbd_sdr.h"
 #include "usbd_core.h"
 #include "cdc_desc.h"
 
-/** @addtogroup AT32F415_middlewares_usbd_class
+/** @addtogroup AT32F403A_407_middlewares_usbd_class
   * @{
   */
 
@@ -87,9 +86,9 @@ ALIGNED_HEAD static uint8_t g_usbd_descriptor[USB_DEVICE_DESC_LEN] ALIGNED_TAIL 
   USB_DESCIPTOR_TYPE_DEVICE,             /* bDescriptorType */
   0x00,                                  /* bcdUSB */
   0x02,
-  0x02,                                  /* bDeviceClass */
-  0x00,                                  /* bDeviceSubClass */
-  0x00,                                  /* bDeviceProtocol */
+  0xef,                                  /* bDeviceClass */
+  0x02,                                  /* bDeviceSubClass */
+  0x01,                                  /* bDeviceProtocol */
   USB_MAX_EP0_SIZE,                      /* bMaxPacketSize */
   LBYTE(USBD_CDC_VENDOR_ID),             /* idVendor */
   HBYTE(USBD_CDC_VENDOR_ID),             /* idVendor */
@@ -115,12 +114,22 @@ ALIGNED_HEAD static uint8_t g_usbd_configuration[USBD_CDC_CONFIG_DESC_SIZE] ALIG
   USB_DESCIPTOR_TYPE_CONFIGURATION,      /* bDescriptorType: configuration */
   LBYTE(USBD_CDC_CONFIG_DESC_SIZE),          /* wTotalLength: bytes returned */
   HBYTE(USBD_CDC_CONFIG_DESC_SIZE),          /* wTotalLength: bytes returned */
-  0x02,                                  /* bNumInterfaces: 2 interface */
+  0x06,                                  /* bNumInterfaces: 6 interface: one VCP need two interface,so three VCP need six interface */
   0x01,                                  /* bConfigurationValue: configuration value */
   0x00,                                  /* iConfiguration: index of string descriptor describing
                                             the configuration */
   0xC0,                                  /* bmAttributes: self powered */
   0x32,                                  /* MaxPower 100 mA: this current is used for detecting vbus */
+  
+  /* Interface Association Descriptor(IAD Descriptor) */
+    0x08,   /*blength */
+    0x0B,   /*bDescriptorType */
+    0x00,   /*bFirstInterface */
+    0x02,   /*bInterfaceCount */
+    0x02,   /*bFunctionclass -- CDC */
+    0x02,   /*bFunctionSubClass */
+    0x01,   /*bFunctionProtocoll */
+    0x02,   /*iFunction */
 
   USB_DEVICE_IF_DESC_LEN,                /* bLength: interface descriptor size */
   USB_DESCIPTOR_TYPE_INTERFACE,          /* bDescriptorType: interface descriptor type */
@@ -189,6 +198,163 @@ ALIGNED_HEAD static uint8_t g_usbd_configuration[USBD_CDC_CONFIG_DESC_SIZE] ALIG
   LBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),
   HBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),        /* wMaxPacketSize: maximum packe size this endpoint */
   0x00,                                  /* bInterval: interval for polling endpoint for data transfers */
+  
+  /* Interface Association Descriptor(IAD Descriptor) */
+    0x08,   /*blength */
+    0x0B,   /*bDescriptorType */
+    0x02,   /*bFirstInterface */
+    0x02,   /*bInterfaceCount */
+    0x02,   /*bFunctionclass -- CDC */
+    0x02,   /*bFunctionSubClass */
+    0x01,   /*bFunctionProtocoll */
+    0x02,   /*iFunction */
+  
+  USB_DEVICE_IF_DESC_LEN,                /* bLength: interface descriptor size */
+  USB_DESCIPTOR_TYPE_INTERFACE,          /* bDescriptorType: interface descriptor type */
+  0x02,                                  /* bInterfaceNumber: number of interface */
+  0x00,                                  /* bAlternateSetting: alternate set */
+  0x01,                                  /* bNumEndpoints: number of endpoints */
+  USB_CLASS_CODE_CDC,                    /* bInterfaceClass: CDC class code */
+  0x02,                                  /* bInterfaceSubClass: subclass code, Abstract Control Model*/
+  0x01,                                  /* bInterfaceProtocol: protocol code, AT Command */
+  0x00,                                  /* iInterface: index of string descriptor */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_HEADER,               /* bDescriptorSubtype: Header function Descriptor 0x00*/
+  LBYTE(CDC_BCD_NUM),
+  HBYTE(CDC_BCD_NUM),                    /* bcdCDC: USB class definitions for communications */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_CMF,                  /* bDescriptorSubtype: Call Management function descriptor subtype 0x01 */
+  0x00,                                  /* bmCapabilities: 0x00*/
+  0x01,                                  /* bDataInterface: interface number of data class interface optionally used for call management */
+
+  0x04,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_ACM,                  /* bDescriptorSubtype: Abstract Control Management functional descriptor subtype 0x02 */
+  0x02,                                  /* bmCapabilities: Support Set_Line_Coding and Get_Line_Coding 0x02 */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_UFD,                  /* bDescriptorSubtype: Union Function Descriptor subtype 0x06 */
+  0x00,                                  /* bControlInterface: The interface number of the communications or data class interface 0x00 */
+  0x01,                                  /* bSubordinateInterface0: interface number of first subordinate interface in the union */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_INT1_EPT,                       /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_INTERRUPT,                /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_CMD_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_CMD_MAXPACKET_SIZE),    /* wMaxPacketSize: maximum packe size this endpoint */
+  CDC_HID_BINTERVAL_TIME,                    /* bInterval: interval for polling endpoint for data transfers */
+
+
+  USB_DEVICE_IF_DESC_LEN,                /* bLength: interface descriptor size */
+  USB_DESCIPTOR_TYPE_INTERFACE,          /* bDescriptorType: interface descriptor type */
+  0x03,                                  /* bInterfaceNumber: number of interface */
+  0x00,                                  /* bAlternateSetting: alternate set */
+  0x02,                                  /* bNumEndpoints: number of endpoints */
+  USB_CLASS_CODE_CDCDATA,                /* bInterfaceClass: CDC-data class code */
+  0x00,                                  /* bInterfaceSubClass: Data interface subclass code 0x00*/
+  0x00,                                  /* bInterfaceProtocol: data class protocol code 0x00 */
+  0x00,                                  /* iInterface: index of string descriptor */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_BULK_IN1_EPT,                  /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_BULK,                     /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_IN_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_IN_MAXPACKET_SIZE),         /* wMaxPacketSize: maximum packe size this endpoint */
+  0x00,                                  /* bInterval: interval for polling endpoint for data transfers */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_BULK_OUT1_EPT,                 /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_BULK,                     /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),        /* wMaxPacketSize: maximum packe size this endpoint */
+  0x00,  
+  
+  /* Interface Association Descriptor(IAD Descriptor) */
+    0x08,   /*blength */
+    0x0B,   /*bDescriptorType */
+    0x04,   /*bFirstInterface */
+    0x02,   /*bInterfaceCount */
+    0x02,   /*bFunctionclass -- CDC */
+    0x02,   /*bFunctionSubClass */
+    0x01,   /*bFunctionProtocoll */
+    0x02,   /*iFunction */
+    
+  USB_DEVICE_IF_DESC_LEN,                /* bLength: interface descriptor size */
+  USB_DESCIPTOR_TYPE_INTERFACE,          /* bDescriptorType: interface descriptor type */
+  0x04,                                  /* bInterfaceNumber: number of interface */
+  0x00,                                  /* bAlternateSetting: alternate set */
+  0x01,                                  /* bNumEndpoints: number of endpoints */
+  USB_CLASS_CODE_CDC,                    /* bInterfaceClass: CDC class code */
+  0x02,                                  /* bInterfaceSubClass: subclass code, Abstract Control Model*/
+  0x01,                                  /* bInterfaceProtocol: protocol code, AT Command */
+  0x00,                                  /* iInterface: index of string descriptor */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_HEADER,               /* bDescriptorSubtype: Header function Descriptor 0x00*/
+  LBYTE(CDC_BCD_NUM),
+  HBYTE(CDC_BCD_NUM),                    /* bcdCDC: USB class definitions for communications */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_CMF,                  /* bDescriptorSubtype: Call Management function descriptor subtype 0x01 */
+  0x00,                                  /* bmCapabilities: 0x00*/
+  0x01,                                  /* bDataInterface: interface number of data class interface optionally used for call management */
+
+  0x04,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_ACM,                  /* bDescriptorSubtype: Abstract Control Management functional descriptor subtype 0x02 */
+  0x02,                                  /* bmCapabilities: Support Set_Line_Coding and Get_Line_Coding 0x02 */
+
+  0x05,                                  /* bFunctionLength: size of this descriptor in bytes */
+  USBD_CDC_CS_INTERFACE,                 /* bDescriptorType: CDC interface descriptor type */
+  USBD_CDC_SUBTYPE_UFD,                  /* bDescriptorSubtype: Union Function Descriptor subtype 0x06 */
+  0x00,                                  /* bControlInterface: The interface number of the communications or data class interface 0x00 */
+  0x01,                                  /* bSubordinateInterface0: interface number of first subordinate interface in the union */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_INT2_EPT,                       /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_INTERRUPT,                /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_CMD_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_CMD_MAXPACKET_SIZE),    /* wMaxPacketSize: maximum packe size this endpoint */
+  CDC_HID_BINTERVAL_TIME,                    /* bInterval: interval for polling endpoint for data transfers */
+
+
+  USB_DEVICE_IF_DESC_LEN,                /* bLength: interface descriptor size */
+  USB_DESCIPTOR_TYPE_INTERFACE,          /* bDescriptorType: interface descriptor type */
+  0x05,                                  /* bInterfaceNumber: number of interface */
+  0x00,                                  /* bAlternateSetting: alternate set */
+  0x02,                                  /* bNumEndpoints: number of endpoints */
+  USB_CLASS_CODE_CDCDATA,                /* bInterfaceClass: CDC-data class code */
+  0x00,                                  /* bInterfaceSubClass: Data interface subclass code 0x00*/
+  0x00,                                  /* bInterfaceProtocol: data class protocol code 0x00 */
+  0x00,                                  /* iInterface: index of string descriptor */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_BULK_IN2_EPT,                  /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_BULK,                     /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_IN_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_IN_MAXPACKET_SIZE),         /* wMaxPacketSize: maximum packe size this endpoint */
+  0x00,                                  /* bInterval: interval for polling endpoint for data transfers */
+
+  USB_DEVICE_EPT_LEN,                    /* bLength: size of endpoint descriptor in bytes */
+  USB_DESCIPTOR_TYPE_ENDPOINT,           /* bDescriptorType: endpoint descriptor type */
+  USBD_CDC_BULK_OUT2_EPT,                 /* bEndpointAddress: the address of endpoint on usb device described by this descriptor */
+  USB_EPT_DESC_BULK,                     /* bmAttributes: endpoint attributes */
+  LBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),
+  HBYTE(USBD_CDC_OUT_MAXPACKET_SIZE),        /* wMaxPacketSize: maximum packe size this endpoint */
+  0x00,  
+    
 };
 
 /**

@@ -1,8 +1,8 @@
 /**
   **************************************************************************
   * @file     cdc_class.c
-  * @version  v2.0.6
-  * @date     2022-06-28
+  * @version  v2.0.8
+  * @date     2022-04-02
   * @brief    usb cdc class type
   **************************************************************************
   *                       Copyright notice & Disclaimer
@@ -27,7 +27,7 @@
 #include "cdc_class.h"
 #include "cdc_desc.h"
 
-/** @addtogroup AT32F415_middlewares_usbd_class
+/** @addtogroup AT32F403A_407_middlewares_usbd_class
   * @{
   */
 
@@ -79,8 +79,9 @@ usbd_class_handler cdc_class_handler =
   class_event_handler,
   &cdc_struct
 };
+
 /**
-  * @brief  initialize usb custom hid endpoint
+  * @brief  initialize usb endpoint
   * @param  udev: to the structure of usbd_core_type
   * @retval status of usb_sts_type
   */
@@ -90,20 +91,42 @@ static usb_sts_type class_init_handler(void *udev)
   usbd_core_type *pudev = (usbd_core_type *)udev;
   cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
 
-  /* init cdc struct */
-  cdc_struct_init(pcdc);
+#ifndef USB_EPT_AUTO_MALLOC_BUFFER
+  /* use user define buffer address */
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_INT_EPT, EPT2_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_IN_EPT, EPT1_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_OUT_EPT, EPT1_RX_ADDR);
+  
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_INT1_EPT, EPT3_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_IN1_EPT, EPT4_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_OUT1_EPT, EPT4_RX_ADDR);
+  
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_INT2_EPT, EPT6_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_IN2_EPT, EPT5_TX_ADDR);
+  usbd_ept_buf_custom_define(pudev, USBD_CDC_BULK_OUT2_EPT, EPT5_RX_ADDR);
+#endif
 
   /* open in endpoint */
   usbd_ept_open(pudev, USBD_CDC_INT_EPT, EPT_INT_TYPE, USBD_CDC_CMD_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_INT1_EPT, EPT_INT_TYPE, USBD_CDC_CMD_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_INT2_EPT, EPT_INT_TYPE, USBD_CDC_CMD_MAXPACKET_SIZE);
 
   /* open in endpoint */
   usbd_ept_open(pudev, USBD_CDC_BULK_IN_EPT, EPT_BULK_TYPE, USBD_CDC_IN_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_BULK_IN1_EPT, EPT_BULK_TYPE, USBD_CDC_IN_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_BULK_IN2_EPT, EPT_BULK_TYPE, USBD_CDC_IN_MAXPACKET_SIZE);
 
   /* open out endpoint */
   usbd_ept_open(pudev, USBD_CDC_BULK_OUT_EPT, EPT_BULK_TYPE, USBD_CDC_OUT_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_BULK_OUT1_EPT, EPT_BULK_TYPE, USBD_CDC_OUT_MAXPACKET_SIZE);
+  usbd_ept_open(pudev, USBD_CDC_BULK_OUT2_EPT, EPT_BULK_TYPE, USBD_CDC_OUT_MAXPACKET_SIZE);
 
   /* set out endpoint to receive status */
   usbd_ept_recv(pudev, USBD_CDC_BULK_OUT_EPT, pcdc->g_rx_buff, USBD_CDC_OUT_MAXPACKET_SIZE);
+  usbd_ept_recv(pudev, USBD_CDC_BULK_OUT1_EPT, pcdc->g_rx1_buff, USBD_CDC_OUT_MAXPACKET_SIZE);
+  usbd_ept_recv(pudev, USBD_CDC_BULK_OUT2_EPT, pcdc->g_rx2_buff, USBD_CDC_OUT_MAXPACKET_SIZE);
+
+  cdc_struct_init(pcdc);
 
   return status;
 }
@@ -120,12 +143,18 @@ static usb_sts_type class_clear_handler(void *udev)
 
   /* close in endpoint */
   usbd_ept_close(pudev, USBD_CDC_INT_EPT);
+  usbd_ept_close(pudev, USBD_CDC_INT1_EPT);
+  usbd_ept_close(pudev, USBD_CDC_INT2_EPT);
 
   /* close in endpoint */
   usbd_ept_close(pudev, USBD_CDC_BULK_IN_EPT);
+  usbd_ept_close(pudev, USBD_CDC_BULK_IN1_EPT);
+  usbd_ept_close(pudev, USBD_CDC_BULK_IN2_EPT);
 
   /* close out endpoint */
   usbd_ept_close(pudev, USBD_CDC_BULK_OUT_EPT);
+  usbd_ept_close(pudev, USBD_CDC_BULK_OUT1_EPT);
+  usbd_ept_close(pudev, USBD_CDC_BULK_OUT2_EPT);
 
   return status;
 }
@@ -187,7 +216,7 @@ static usb_sts_type class_setup_handler(void *udev, usb_setup_type *setup)
 }
 
 /**
-  * @brief  usb device endpoint 0 in status stage complete
+  * @brief  usb device class endpoint 0 in status stage complete
   * @param  udev: to the structure of usbd_core_type
   * @retval status of usb_sts_type
   */
@@ -201,8 +230,8 @@ static usb_sts_type class_ept0_tx_handler(void *udev)
 }
 
 /**
-  * @brief  usb device endpoint 0 out status stage complete
-  * @param  udev: usb device core handler type
+  * @brief  usb device class endpoint 0 out status stage complete
+  * @param  udev: to the structure of usbd_core_type
   * @retval status of usb_sts_type
   */
 static usb_sts_type class_ept0_rx_handler(void *udev)
@@ -222,7 +251,7 @@ static usb_sts_type class_ept0_rx_handler(void *udev)
 }
 
 /**
-  * @brief  usb device transmision complete handler
+  * @brief  usb device class transmision complete handler
   * @param  udev: to the structure of usbd_core_type
   * @param  ept_num: endpoint number
   * @retval status of usb_sts_type
@@ -236,14 +265,18 @@ static usb_sts_type class_in_handler(void *udev, uint8_t ept_num)
   /* ...user code...
     trans next packet data
   */
-  usbd_flush_tx_fifo(pudev, ept_num);
-  pcdc->g_tx_completed = 1;
+  if(ept_num == (USBD_CDC_BULK_IN_EPT&0x7f))
+    pcdc->g_tx_completed = 1;
+  if(ept_num == (USBD_CDC_BULK_IN1_EPT&0x7f))
+    pcdc->g_tx1_completed = 1;
+  if(ept_num == (USBD_CDC_BULK_IN2_EPT&0x7f))
+    pcdc->g_tx2_completed = 1;
 
   return status;
 }
 
 /**
-  * @brief  usb device endpoint receive data
+  * @brief  usb device class endpoint receive data
   * @param  udev: to the structure of usbd_core_type
   * @param  ept_num: endpoint number
   * @retval status of usb_sts_type
@@ -253,18 +286,41 @@ static usb_sts_type class_out_handler(void *udev, uint8_t ept_num)
   usb_sts_type status = USB_OK;
   usbd_core_type *pudev = (usbd_core_type *)udev;
   cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
-
-  /* get endpoint receive data length  */
-  pcdc->g_rxlen = usbd_get_recv_len(pudev, ept_num);
-
-  /*set recv flag*/
-  pcdc->g_rx_completed = 1;
+  
+  if((ept_num & 0x7F) == USBD_CDC_BULK_OUT_EPT)
+  {
+    /* get endpoint receive data length  */
+    pcdc->g_rxlen = usbd_get_recv_len(pudev, ept_num);
+    
+    /*set recv flag*/
+    pcdc->g_rx_completed = 1;  
+  }
+  
+  if((ept_num & 0x7F) == USBD_CDC_BULK_OUT1_EPT)
+  {
+    /* get endpoint receive data length  */
+    pcdc->g_rxlen1 = usbd_get_recv_len(pudev, ept_num);
+    
+    /*set recv flag*/
+    pcdc->g_rx1_completed = 1;    
+  }
+  
+  if((ept_num & 0x7F) == USBD_CDC_BULK_OUT2_EPT)
+  {
+    /* get endpoint receive data length  */
+    pcdc->g_rxlen2 = usbd_get_recv_len(pudev, ept_num);
+    
+    /*set recv flag*/
+    pcdc->g_rx2_completed = 1;    
+  }
+  
+  
 
   return status;
 }
 
 /**
-  * @brief  usb device sof handler
+  * @brief  usb device class sof handler
   * @param  udev: to the structure of usbd_core_type
   * @retval status of usb_sts_type
   */
@@ -278,7 +334,7 @@ static usb_sts_type class_sof_handler(void *udev)
 }
 
 /**
-  * @brief  usb device event handler
+  * @brief  usb device class event handler
   * @param  udev: to the structure of usbd_core_type
   * @param  event: usb device event
   * @retval status of usb_sts_type
@@ -302,11 +358,6 @@ static usb_sts_type class_event_handler(void *udev, usbd_event_type event)
       /* ...user code... */
 
       break;
-    case USBD_INISOINCOM_EVENT:
-      break;
-    case USBD_OUTISOINCOM_EVENT:
-      break;
-
     default:
       break;
   }
@@ -322,6 +373,10 @@ static usb_sts_type cdc_struct_init(cdc_struct_type *pcdc)
 {
   pcdc->g_tx_completed = 1;
   pcdc->g_rx_completed = 0;
+  pcdc->g_tx1_completed = 1;
+  pcdc->g_rx1_completed = 0;
+  pcdc->g_tx2_completed = 1;
+  pcdc->g_rx2_completed = 0;
   pcdc->alt_setting = 0;
   pcdc->linecoding.bitrate = linecoding.bitrate;
   pcdc->linecoding.data = linecoding.data;
@@ -359,6 +414,53 @@ uint16_t usb_vcp_get_rxdata(void *udev, uint8_t *recv_data)
   return tmp_len;
 }
 
+
+uint16_t usb_vcp_get_rx2data(void *udev, uint8_t *recv_data)
+{
+  uint16_t i_index = 0;
+  uint16_t tmp_len = 0;
+  usbd_core_type *pudev = (usbd_core_type *)udev;
+  cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
+
+  if(pcdc->g_rx2_completed == 0)
+  {
+    return 0;
+  }
+  pcdc->g_rx2_completed = 0;
+  tmp_len = pcdc->g_rxlen2;
+  for(i_index = 0; i_index < pcdc->g_rxlen2; i_index ++)
+  {
+    recv_data[i_index] = pcdc->g_rx2_buff[i_index];
+  }
+
+  usbd_ept_recv(pudev, USBD_CDC_BULK_OUT2_EPT, pcdc->g_rx2_buff, USBD_CDC_OUT_MAXPACKET_SIZE);
+
+  return tmp_len;
+}
+
+uint16_t usb_vcp_get_rx1data(void *udev, uint8_t *recv_data)
+{
+  uint16_t i_index = 0;
+  uint16_t tmp_len = 0;
+  usbd_core_type *pudev = (usbd_core_type *)udev;
+  cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
+
+  if(pcdc->g_rx1_completed == 0)
+  {
+    return 0;
+  }
+  pcdc->g_rx1_completed = 0;
+  tmp_len = pcdc->g_rxlen1;
+  for(i_index = 0; i_index < pcdc->g_rxlen1; i_index ++)
+  {
+    recv_data[i_index] = pcdc->g_rx1_buff[i_index];
+  }
+
+  usbd_ept_recv(pudev, USBD_CDC_BULK_OUT1_EPT, pcdc->g_rx1_buff, USBD_CDC_OUT_MAXPACKET_SIZE);
+
+  return tmp_len;
+}
+
 /**
   * @brief  usb device class send data
   * @param  udev: to the structure of usbd_core_type
@@ -383,8 +485,44 @@ error_status usb_vcp_send_data(void *udev, uint8_t *send_data, uint16_t len)
   return status;
 }
 
+error_status usb_vcp_send2_data(void *udev, uint8_t *send_data, uint16_t len)
+{
+  error_status status = SUCCESS;
+  usbd_core_type *pudev = (usbd_core_type *)udev;
+  cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
+  if(pcdc->g_tx2_completed)
+  {
+    pcdc->g_tx2_completed = 0;
+    usbd_ept_send(pudev, USBD_CDC_BULK_IN2_EPT, send_data, len);
+  }
+  else
+  {
+    status = ERROR;
+  }
+  return status;
+}
+
+error_status usb_vcp_send1_data(void *udev, uint8_t *send_data, uint16_t len)
+{
+  error_status status = SUCCESS;
+  usbd_core_type *pudev = (usbd_core_type *)udev;
+  cdc_struct_type *pcdc = (cdc_struct_type *)pudev->class_handler->pdata;
+  if(pcdc->g_tx1_completed)
+  {
+    pcdc->g_tx1_completed = 0;
+    usbd_ept_send(pudev, USBD_CDC_BULK_IN1_EPT, send_data, len);
+  }
+  else
+  {
+    status = ERROR;
+  }
+  return status;
+}
+
+
+
 /**
-  * @brief  usb device function
+  * @brief  usb device class request function
   * @param  udev: to the structure of usbd_core_type
   * @param  cmd: request number
   * @param  buff: request buffer
