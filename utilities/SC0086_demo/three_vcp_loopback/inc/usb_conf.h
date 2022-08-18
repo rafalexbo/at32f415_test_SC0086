@@ -52,6 +52,15 @@ extern "C" {
 #define USB_ID                           0
 #define OTG_CLOCK                        CRM_OTGFS1_PERIPH_CLOCK
 #define OTG_IRQ                          OTGFS1_IRQn
+
+#define OTG_PIN_GPIO                     GPIOA
+#define OTG_PIN_GPIO_CLOCK               CRM_GPIOA_PERIPH_CLOCK
+#define OTG_PIN_VBUS                     GPIO_PINS_9
+#define OTG_PIN_ID                       GPIO_PINS_10
+
+#define OTG_PIN_SOF_GPIO                 GPIOA
+#define OTG_PIN_SOF_GPIO_CLOCK           CRM_GPIOA_PERIPH_CLOCK
+#define OTG_PIN_SOF                      GPIO_PINS_8
     
   
 /**
@@ -67,6 +76,10 @@ extern "C" {
 #define USBD_EP1_TX_SIZE                 20
 #define USBD_EP2_TX_SIZE                 20
 #define USBD_EP3_TX_SIZE                 20
+#define USBD_EP4_TX_SIZE                 20
+#define USBD_EP5_TX_SIZE                 20
+#define USBD_EP6_TX_SIZE                 20
+#define USBD_EP7_TX_SIZE                 20
 #endif
   
 /**

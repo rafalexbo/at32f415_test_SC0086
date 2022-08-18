@@ -42,9 +42,11 @@
 /* usb global struct define */
 //usbd_core_type usb_core_dev;
 otg_core_type usb_core_dev;
-uint8_t usb_buffer[512];
-uint8_t usb_buffer2[512];
-uint8_t usb_buffer1[512];
+uint8_t usb_buffer[256];
+uint8_t usb_buffer2[256];
+uint8_t usb_buffer1[256];
+
+void usb_gpio_config(void);
 
 /**
   * @brief  usb 48M clock select
@@ -109,6 +111,9 @@ int main(void)
   system_clock_config();
 
   at32_board_init();
+  
+  /* usb gpio config */
+  usb_gpio_config();
   
   /* enable otgfs clock */
   crm_periph_clock_enable(OTG_CLOCK, TRUE);
@@ -203,6 +208,39 @@ int main(void)
       }while(timeout --);
     }
   }
+}
+
+/**
+  * @brief  this function config gpio.
+  * @param  none
+  * @retval none
+  */
+void usb_gpio_config(void)
+{
+  gpio_init_type gpio_init_struct;
+
+  crm_periph_clock_enable(OTG_PIN_GPIO_CLOCK, TRUE);
+  gpio_default_para_init(&gpio_init_struct);
+
+  gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+  gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
+  gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
+  gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
+
+#ifdef USB_SOF_OUTPUT_ENABLE
+  crm_periph_clock_enable(OTG_PIN_SOF_GPIO_CLOCK, TRUE);
+  gpio_init_struct.gpio_pins = OTG_PIN_SOF;
+  gpio_init(OTG_PIN_SOF_GPIO, &gpio_init_struct);
+#endif
+
+  /* otgfs use vbus pin */
+#ifndef USB_VBUS_IGNORE
+  gpio_init_struct.gpio_pins = OTG_PIN_VBUS;
+  gpio_init_struct.gpio_pull = GPIO_PULL_DOWN;
+  gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
+  gpio_init(OTG_PIN_GPIO, &gpio_init_struct);
+#endif
+
 }
 
 

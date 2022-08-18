@@ -218,6 +218,7 @@
                     <state>USE_STDPERIPH_DRIVER</state>
                     <state>AT_START_F415_V1</state>
                     <state>USE_OTG_DEVICE_MODE</state>
+                    <state>USB_VBUS_IGNORE</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -294,11 +295,12 @@
                 </option>
                 <option>
                     <name>IExtraOptionsCheck</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>IExtraOptions</name>
-                    <state></state>
+                    <state>-DUSB_EPT_MAX_NUM=8
+</state>
                 </option>
                 <option>
                     <name>CCLangConformance</name>
@@ -757,7 +759,7 @@
                 </option>
                 <option>
                     <name>IlinkIcfFile</name>
-                    <state>$TOOLKIT_DIR$\config\linker\ArteryTek\AT32F415xC.icf</state>
+                    <state>$TOOLKIT_DIR$\config\linker\ArteryTek\AT32F415xB.icf</state>
                 </option>
                 <option>
                     <name>IlinkIcfFileSlave</name>

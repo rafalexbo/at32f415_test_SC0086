@@ -139,6 +139,7 @@ void at32_board_init()
   delay_init();
 
   /* configure led in at_start_board */
+#if 0  
   at32_led_init(LED2);
   at32_led_init(LED3);
   at32_led_init(LED4);
@@ -148,6 +149,7 @@ void at32_board_init()
 
   /* configure button in at_start board */
   at32_button_init();
+#endif  
 }
 
 /**
